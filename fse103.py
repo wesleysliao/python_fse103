@@ -30,24 +30,25 @@ class FSE103():
         # read( timeout=10)
         #
         # R
-        readbyte = 0
-        while self.serialport.read().hex() != "0d" and readbyte < timeout:
-            readbyte += 1
+        readcount = 0
 
-        if readbyte < timeout:
-            messagesize = self.serialport.read()
-            messagetype = self.serialport.read()
+        while struct.unpack('B',self.serialport.read())[0] != 0x0d and readcount < timeout:
+            readcount += 1
+
+        if readcount < timeout:
+            messagesize = struct.unpack('B',self.serialport.read())[0]
+            messagetype = struct.unpack('B',self.serialport.read())[0]
 
 
             self.timestamp = struct.unpack('>I', self.serialport.read(4))[0]
 
-            if messagetype.hex() == "66":
+            if messagetype == 0x66:
                 self.mode = "force"
                 self.force_x = struct.unpack('>f', self.serialport.read(4))[0]
                 self.force_y = struct.unpack('>f', self.serialport.read(4))[0]
                 self.force_z = struct.unpack('>f', self.serialport.read(4))[0]
 
-            elif messagetype.hex() == "72":
+            elif messagetype == 0x72:
                 self.mode = "raw"
                 self.raw_x = struct.unpack('>f', self.serialport.read(4))[0]
                 self.raw_y = struct.unpack('>f', self.serialport.read(4))[0]

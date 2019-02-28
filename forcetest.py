@@ -5,4 +5,4 @@ sensor = FSE103("/dev/ttyACM0")
 
 while True:
     sensor.read()
-    print(sensor.serialport.in_waiting, sensor.timestamp, sensor.force_z, sensor.raw_z)
+    print(sensor.timestamp, sensor.force_x, sensor.force_y, sensor.force_z)
