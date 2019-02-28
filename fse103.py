@@ -26,33 +26,39 @@ class FSE103():
         self.raw_y = 0.0
         self.raw_z = 0.0
 
-    def read(self, timeout=10):
-        # read( timeout=10)
-        #
-        # R
-        readcount = 0
+    def read(self):
+        #check how many bytes are waiting in the buffer
+        try:
+            waiting = self.serialport.in_waiting()
+        except:
+            waiting = self.serialport.in_waiting
 
-        while struct.unpack('B',self.serialport.read())[0] != 0x0d and readcount < timeout:
-            readcount += 1
+        #If there is a lot of data waiting, discard it, so we get he most recent values
+        messagesize = 0x14
+        mostrecent = (2*messagesize)-1
+        if waiting > mostrecent:
+            self.serialport.read(waiting-mostrecent)
 
-        if readcount < timeout:
-            messagesize = struct.unpack('B',self.serialport.read())[0]
-            messagetype = struct.unpack('B',self.serialport.read())[0]
+        #skip until we get the start byte
+        while struct.unpack('B',self.serialport.read())[0] != 0x0d:
+            pass
 
+        messagesize = struct.unpack('B',self.serialport.read())[0]
+        messagetype = struct.unpack('B',self.serialport.read())[0]
 
-            self.timestamp = struct.unpack('>I', self.serialport.read(4))[0]
+        self.timestamp = struct.unpack('>I', self.serialport.read(4))[0]
 
-            if messagetype == 0x66:
-                self.mode = "force"
-                self.force_x = struct.unpack('>f', self.serialport.read(4))[0]
-                self.force_y = struct.unpack('>f', self.serialport.read(4))[0]
-                self.force_z = struct.unpack('>f', self.serialport.read(4))[0]
+        if messagetype == 0x66:
+            self.mode = "force"
+            self.force_x = struct.unpack('>f', self.serialport.read(4))[0]
+            self.force_y = struct.unpack('>f', self.serialport.read(4))[0]
+            self.force_z = struct.unpack('>f', self.serialport.read(4))[0]
 
-            elif messagetype == 0x72:
-                self.mode = "raw"
-                self.raw_x = struct.unpack('>f', self.serialport.read(4))[0]
-                self.raw_y = struct.unpack('>f', self.serialport.read(4))[0]
-                self.raw_z = struct.unpack('>f', self.serialport.read(4))[0]
+        elif messagetype == 0x72:
+            self.mode = "raw"
+            self.raw_x = struct.unpack('>f', self.serialport.read(4))[0]
+            self.raw_y = struct.unpack('>f', self.serialport.read(4))[0]
+            self.raw_z = struct.unpack('>f', self.serialport.read(4))[0]
 
     def set_raw_values(self):
         self.serialport.write(b'r')
